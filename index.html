@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر البنية النازكة | مستحضرات التجميل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ff6584;
+            --light-pink: #fff0f3;
+            --accent-pink: #ff8fab;
+            --dark-text: #4a4a4a;
+            --white: #ffffff;
+            --shadow: 0 10px 30px rgba(255, 101, 132, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: #faf6f7;
+            color: var(--dark-text);
+            line-height: 1.6;
+            padding: 0; /* إزالة المسافات من جميع الجوانب */
+        }
+
+        .container {
+            max-width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            background: var(--white);
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            border: none;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff8fab, var(--primary-pink));
+            color: var(--white);
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .product-content {
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .image-gallery {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .image-gallery img {
+            width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+            border-radius: 15px;
+            background-color: var(--light-pink);
+            border: 2px solid #ffd1dc;
+        }
+
+        .product-info {
+            background-color: var(--light-pink);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 35px;
+            border-right: 5px solid var(--primary-pink);
+        }
+
+        .product-info h2 {
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .product-info ul {
+            list-style: none;
+        }
+
+        .product-info li {
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            position: relative;
+            padding-right: 25px;
+        }
+
+        .product-info li::before {
+            content: "✨";
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .order-section {
+            background: var(--white);
+            border: 2px dashed #ffb3c6;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .order-section h3 {
+            text-align: center;
+            color: var(--primary-pink);
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ffd1dc;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            background-color: #fff9fa;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-pink);
+            background-color: var(--white);
+        }
+
+        .price-box {
+            background-color: var(--light-pink);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            margin-bottom: 25px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-pink), #e05370);
+            color: var(--white);
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 101, 132, 0.4);
+            transition: opacity 0.3s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        #successMessage {
+            display: none;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid #a5d6a7;
+            margin-top: 20px;
+        }
+
+        /* زر الواتساب العائم في أسفل يمين الشاشة ومتحرك مع التمرير */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #4a4a4a;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- زر الواتساب العائم أسفل اليمين -->
+    <a href="https://wa.me/" class="whatsapp-float" target="_blank" title="تواصل معنا عبر الواتساب">
+        <svg viewBox="0 0 24 24">
+            <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.74.46 3.45 1.34 4.95l-1.42 5.19 5.33-1.4c1.45.79 3.1 1.21 4.77 1.21 5.46 0 9.9-4.44 9.9-9.9 0-2.65-1.03-5.14-2.9-7.01-1.87-1.87-4.36-2.9-7.12-2.9zm0 1.83c2.25 0 4.36.88 5.95 2.47 1.59 1.59 2.47 3.7 2.47 5.95 0 4.64-3.78 8.42-8.42 8.42-1.52 0-3.01-.41-4.31-1.19l-.31-.18-3.15.83.84-3.07-.2-.32c-.85-1.35-1.3-2.93-1.3-4.54 0-4.64 3.78-8.42 8.42-8.42zm4.61 10.36c-.25-.12-1.47-.73-1.7-.82-.23-.09-.4-.13-.57.12-.17.25-.66.82-.81.99-.15.17-.3.19-.55.07-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.39.11-.51.11-.11.25-.3.37-.45.12-.15.16-.25.24-.42.08-.17.04-.32-.02-.45-.06-.12-.57-1.38-.79-1.89-.21-.5-.43-.43-.57-.44l-.49-.01c-.17 0-.45.06-.69.32-.24.25-.92.9-.92 2.19 0 1.29.94 2.54 1.07 2.72.13.18 1.85 2.82 4.48 3.95.63.27 1.12.43 1.5.55.63.2 1.21.17 1.66.1.51-.08 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.17-.48-.29z"/>
+        </svg>
+    </a>
+
+    <div class="container">
+        <header>
+            <h1>متجر البنية النازكة 🌸</h1>
+            <p>لمستحضرات التجميل والعناية بالبشرة الفاخرة</p>
+        </header>
+
+        <div class="product-content">
+            
+            <div class="image-gallery">
+                <img src="https://i.imgur.com/aWWeAOi.jpeg" alt="سيروم فيتامين EQQUAL BERRY - صورة 1">
+                <img src="https://i.imgur.com/oxu7YRc.jpeg" alt="سيروم فيتامين EQQUAL BERRY - صورة 2">
+            </div>
+
+            <div class="product-info">
+                <h2>سيروم فيتامين المضيء والمرطب - EQQUAL BERRY (30 مل)</h2>
+                <ul>
+                    <li><strong>نضارة وإشراقة فورية:</strong> يعيد للبشرة الباهتة حيويتها ومظهرها المشرق.</li>
+                    <li><strong>ترطيب عميق وحماية للحاجز:</strong> غني بالسيراميد لحبس الرطوبة وتقوية حاجز البشرة الطبيعي.</li>
+                    <li><strong>توحيد لون البشرة:</strong> يساعد في تقليل التصبغات والآثار لتصبح البشرة أكثر نقاءً.</li>
+                    <li><strong>امتصاص سريع:</strong> قوام خفيف ومريح لا يترك أي ملمس لزج، ومثالي للاستخدام اليومي.</li>
+                </ul>
+            </div>
+
+            <div class="order-section">
+                <h3>🛍️ قسيمة طلب المنتج</h3>
+                <form id="orderForm" onsubmit="submitOrder(event)">
+                    
+                    <div class="form-group">
+                        <label for="name">الاسم الكامل:</label>
+                        <input type="text" id="name" required placeholder="أدخلي اسمك الكريم...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">رقم الهاتف:</label>
+                        <input type="tel" id="phone" required placeholder="09x-xxxxxxx">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">العنوان (المدينة / المنطقة):</label>
+                        <input type="text" id="address" required placeholder="مثال: طرابلس، السراج...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">الكمية:</label>
+                        <select id="quantity" onchange="calculateTotal()">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                    </div>
+
+                    <div class="price-box">
+                        السعر الإجمالي: <span id="totalPrice">95</span> د.ل
+                    </div>
+
+                    <button type="submit" id="orderBtn" class="submit-btn">تأكيد طلب المنتج ✨</button>
+                </form>
+
+                <div id="successMessage">
+                    🎉 تم استلام طلبك بنجاح! شكراً لثقتك بـ "متجر البنية النازكة"، سنتواصل معكِ قريباً لتأكيد الشحن.
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            جميع الحقوق محفوظة © متجر البنية النازكة 2026
+        </footer>
+    </div>
+
+    <script>
+        const unitPrice = 95; 
+        
+        // رابط جوجل شيت الخاص بكِ
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzewu5NOPdsw08_muGp5q46JoR4qcXSk2aXBgMDPIaXiRLWir_BXju-YF7LiAujJekkyw/exec';
+
+        // دالة لتوليد أو جلب بصمة الجهاز الفريدة (UUID) لضمان الطلب لمرة واحدة فقط
+        function getDeviceUUID() {
+            let uuid = localStorage.getItem('device_uuid');
+            if (!uuid) {
+                uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+                localStorage.setItem('device_uuid', uuid);
+            }
+            return uuid;
+        }
+
+        window.onload = function() {
+            if (localStorage.getItem('albunya_ordered') === 'true') {
+                document.getElementById('orderForm').style.display = 'none';
+                const successDiv = document.getElementById('successMessage');
+                successDiv.style.display = 'block';
+                successDiv.innerHTML = "✨ لقد قمتِ بتقديم طلب مسبقاً من هذا الجهاز بالفعل! ننتظر التواصل معكِ قريباً.";
+            }
+        }
+
+        function calculateTotal() {
+            const qty = document.getElementById('quantity').value;
+            const total = qty * unitPrice;
+            document.getElementById('totalPrice').innerText = total;
+        }
+
+        function submitOrder(event) {
+            event.preventDefault();
+
+            if (localStorage.getItem('albunya_ordered') === 'true') {
+                alert('عذراً، يمكنك تقديم طلب واحد فقط لكل متصفح/جهاز.');
+                return;
+            }
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const qty = document.getElementById('quantity').value;
+            const total = document.getElementById('totalPrice').innerText;
+            const deviceUuid = getDeviceUUID();
+
+            const orderData = {
+                name: name,
+                phone: phone,
+                address: address,
+                quantity: qty,
+                total: total,
+                uuid: deviceUuid
+            };
+
+            // قفل الزر لمنع الضغط المزدوج
+            const btn = document.getElementById('orderBtn');
+            btn.disabled = true;
+            btn.innerText = "جاري إرسال الطلب...";
+
+            // إرسال البيانات إلى Google Sheets
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            })
+            .then(() => {
+                // حفظ حالة الطلب لمنع التكرار نهائياً لهذا الجهاز
+                localStorage.setItem('albunya_ordered', 'true');
+
+                // إخفاء النموذج وإظهار رسالة النجاح
+                document.getElementById('orderForm').style.display = 'none';
+                const successDiv = document.getElementById('successMessage');
+                successDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                alert('حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.');
+                btn.disabled = false;
+                btn.innerText = "تأكيد طلب المنتج ✨";
+            });
+        }
+    </script>
+</body>
+</html>
