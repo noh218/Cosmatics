@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--OG-->
+<style>
+:root{--bg:#faf8f5;--card:#fff;--tx:#1d1d1f;--mu:#6b6b70;--ac:#0f766e;--bd:#e6e2db;--ok:#dcfce7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Tahoma,"Segoe UI",Arial,sans-serif;line-height:1.7}
+.w{max-width:760px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 14px}
+h1,h2{margin:.3em 0}.logo{font-weight:700;font-size:20px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.pc{cursor:pointer}.pc img,.ph{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--bd)}.pc div{padding:10px}
+.pr{color:var(--ac);font-weight:700}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.s{background:transparent;color:var(--tx);border:1px solid var(--bd);padding:6px 12px;font-weight:400}
+.btn.big{width:100%;font-size:18px;text-align:center}.btn:disabled{opacity:.5}
+input,textarea{width:100%;padding:11px;margin:4px 0 10px;border:1px solid var(--bd);border-radius:10px;background:#fff;color:var(--tx);font:inherit}
+label,.mu{font-size:14px;color:var(--mu)}
+.hero img{width:100%;max-height:420px;object-fit:cover;border-radius:16px;display:block}
+.hero h1{font-size:28px;margin-top:14px}.big-pr{font-size:26px;color:var(--ac);font-weight:700;margin:6px 0 12px}
+.feat{display:flex;gap:10px;padding:12px;margin:8px 0}.feat b{color:var(--ac)}
+.desc{white-space:pre-wrap;color:var(--mu);font-size:17px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;margin:8px 0;flex-wrap:wrap}
+.row img{width:48px;height:48px;border-radius:8px;object-fit:cover}
+.ok{background:var(--ok);padding:16px;border-radius:12px;text-align:center;margin-top:10px}
+.ord{padding:10px 12px;margin:8px 0;font-size:14px}#pv{max-width:140px;border-radius:10px;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="w" id="app"></div>
+<script>
+const app = document.getElementById('app');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let cfg = {}, P = [], O = [], adm = false, edit = null, img = '', msg = '', done = null, ic = false, draft = null;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const money = n => n + ' ' + cfg.currency;
+async function api(u, m, b) {
+  const r = await fetch(u, { method: m || 'GET', headers: { 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'حدث خطأ');
+  return d;
+}
+
+/* ---------- Meta Pixel ---------- */
+let fbLoaded = false, inited = {};
+function pix(id) {
+  if (!id) return false;
+  if (!fbLoaded) {
+    fbLoaded = true;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  }
+  if (!inited[id]) { inited[id] = 1; fbq('init', id); }
+  return true;
+}
+// Pixel المنتج الخاص، وإلا العام. trackSingle يرسل لهذا الـ Pixel فقط دون غيره
+const pid = p => (p && p.pixel) || cfg.pixel;
+function fb(px, name, params, eid) { if (pix(px)) fbq('trackSingle', px, name, params || {}, eid ? { eventID: eid } : {}); }
+// نفس eventId للمتصفح والخادم حتى لا يُحسب الحدث مرتين
+function track(name, p) {
+  if (adm) return; // لا نحسب تصفح المالك
+  const id = uid();
+  fb(pid(p), name, { content_ids: [p.id], content_type: 'product', content_name: p.title, value: p.price, currency: cfg.currency }, id);
+  setTimeout(() => fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: name, eventId: id, pid: p.id, url: location.href }) }).catch(() => {}), 1000);
+}
+
+/* ---------- التنقل ---------- */
+function go(u) { history.pushState(null, '', u); route(); scrollTo(0, 0); }
+addEventListener('popstate', route);
+function route() {
+  done = null; ic = false; msg = ''; draft = null;
+  render();
+  const m = /^\/p\/(\w+)/.exec(location.pathname), p = m && P.find(x => x.id === m[1]);
+  if (!adm) fb(p ? pid(p) : cfg.pixel, 'PageView');
+  if (p) track('ViewContent', p);
+}
+const head = () => `<header><span class="logo" data-go="/">🛍️ متجري</span>${adm ? '<button class="btn s" data-go="/admin">لوحة التحكم</button>' : ''}</header>`;
+function render() {
+  const p = location.pathname;
+  if (p === '/admin') return admin();
+  const m = /^\/p\/(\w+)/.exec(p);
+  m ? landing(m[1]) : store();
+}
+
+/* ---------- الصفحات ---------- */
+function store() {
+  app.innerHTML = head() + '<h2>المنتجات</h2>' + (P.length ? '' : '<p class="mu">لا توجد منتجات حاليًا.</p>') +
+    '<div class="grid">' + P.map(p => `<div class="card pc" data-go="/p/${p.id}">${p.img ? `<img src="${esc(p.img)}" alt="">` : '<div class="ph"></div>'}<div><b>${esc(p.title)}</b><div class="pr">${money(p.price)}</div></div></div>`).join('') + '</div>';
+}
+function landing(id) {
+  const p = P.find(x => x.id === id);
+  if (!p) { app.innerHTML = head() + '<p class="mu">المنتج غير موجود.</p>'; return; }
+  const det = (p.details || []).map(d => `<div class="card feat"><b>✓</b><span>${esc(d)}</span></div>`).join('');
+  let form;
+  if (done) form = `<div class="ok">✅ تم استلام طلبك، سنتواصل معك قريبًا.${done.wa ? `<br><br><a class="btn" href="${esc(done.wa)}" target="_blank" rel="noopener">تأكيد عبر واتساب</a>` : ''}</div>`;
+  else form = `<div class="card" style="padding:14px"><label>الاسم</label><input id="o-name" autocomplete="name"><label>رقم الهاتف</label><input id="o-phone" type="tel" dir="ltr" autocomplete="tel"><label>المدينة / العنوان</label><input id="o-city"><label>الكمية</label><input id="o-qty" type="number" min="1" value="1"><button class="btn big" data-act="order" data-id="${p.id}">تأكيد الطلب</button>${msg ? `<p class="mu">${esc(msg)}</p>` : ''}</div>`;
+  app.innerHTML = head() + `<section class="hero">${p.img ? `<img src="${esc(p.img)}" alt="">` : ''}<h1>${esc(p.title)}</h1><div class="big-pr">${money(p.price)}</div><button class="btn big" data-act="scroll" data-id="${p.id}">اطلب الآن</button></section>
+  <h2>الوصف</h2><p class="desc">${esc(p.desc)}</p>${det ? `<h2>المميزات والتفاصيل</h2>${det}` : ''}<h2 id="ord">اطلب منتجك</h2>${form}`;
+}
+function admin() {
+  if (!adm) {
+    app.innerHTML = head() + `<h2>تسجيل الدخول</h2><div class="card" style="padding:14px"><label>كلمة السر</label><input id="pw" type="password"><button class="btn big" data-act="login">دخول</button><p class="mu">${esc(msg)}</p></div>`;
+    return;
+  }
+  const e = draft || P.find(p => p.id === edit) || {};
+  app.innerHTML = head() + `<h2>${edit ? 'تعديل منتج' : 'إضافة منتج جديد'}</h2><div class="card" style="padding:14px">
+  <label>صورة المنتج</label>${img ? `<img id="pv" src="${esc(img)}" alt="">` : ''}<input id="f-img" type="file" accept="image/*">
+  <label>اسم المنتج</label><input id="f-title" value="${esc(e.title)}">
+  <label>السعر (رقم فقط، بعملة ${esc(cfg.currency)})</label><input id="f-price" type="number" step="any" value="${esc(e.price)}">
+  <label>الوصف</label><textarea id="f-desc" rows="4">${esc(e.desc)}</textarea>
+  <label>التفاصيل والمميزات (كل سطر ميزة)</label><textarea id="f-det" rows="5">${esc((e.details || []).join('\n'))}</textarea>
+  <label>Pixel ID خاص بهذا المنتج (اختياري)</label><input id="f-pixel" dir="ltr" inputmode="numeric" value="${esc(e.pixel)}">
+  <label>Conversions API Token لهذا المنتج (اختياري)</label><input id="f-token" dir="ltr" value="${esc(e.token)}">
+  <label>Test Event Code (للاختبار فقط، احذفه بعده)</label><input id="f-test" dir="ltr" value="${esc(e.test)}">
+  <p class="mu">اتركها فارغة ليستخدم المنتج الـ Pixel العام من الإعدادات.</p>
+  <button class="btn big" data-act="save">${edit ? 'حفظ التعديلات' : 'إنشاء صفحة المنتج'}</button>
+  ${edit ? '<button class="btn s" style="margin-top:8px" data-act="cancel">إلغاء التعديل</button>' : ''}<p class="mu">${esc(msg)}</p></div>
+  <h2>المنتجات (${P.length})</h2>${P.map(p => `<div class="card row"><span style="display:flex;gap:10px;align-items:center">${p.img ? `<img src="${esc(p.img)}" alt="">` : ''}<span>${esc(p.title)}<br><span class="mu" dir="ltr">/p/${p.id}${p.pixel ? ' · Pixel ' + p.pixel : ''}</span></span></span>
+  <span><button class="btn s" data-go="/p/${p.id}">عرض</button> <button class="btn s" data-act="copy" data-id="${p.id}">نسخ الرابط</button> <button class="btn s" data-act="edit" data-id="${p.id}">تعديل</button> <button class="btn s" data-act="del" data-id="${p.id}">حذف</button></span></div>`).join('')}
+  <h2>الطلبات (${O.length})</h2>${O.map(o => `<div class="card ord"><b>${esc(o.product)}</b> × ${o.qty} — ${money(o.total)}<br>${esc(o.name)} — <span dir="ltr">${esc(o.phone)}</span><br>${esc(o.city)} <span class="mu">${new Date(o.at).toLocaleString('ar')}</span></div>`).join('') || '<p class="mu">لا توجد طلبات بعد.</p>'}`;
+}
+
+/* ---------- الصور ---------- */
+async function prep(file) {
+  const im = await createImageBitmap(file), k = Math.min(1, 900 / Math.max(im.width, im.height));
+  const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', .8);
+}
+const val = i => (document.getElementById(i) || {}).value || '';
+function readDraft() { draft = { title: val('f-title'), price: val('f-price'), desc: val('f-desc'), details: val('f-det').split('\n'), pixel: val('f-pixel'), token: val('f-token'), test: val('f-test') }; }
+app.addEventListener('change', async e => {
+  if (e.target.id !== 'f-img' || !e.target.files[0]) return;
+  readDraft();
+  try { img = await prep(e.target.files[0]); } catch { msg = 'تعذّر قراءة الصورة'; }
+  render();
+});
+// بداية إدخال بيانات الطلب = InitiateCheckout
+app.addEventListener('focusin', e => {
+  if (ic || !/^o-/.test(e.target.id)) return;
+  const p = P.find(x => x.id === location.pathname.split('/')[2]);
+  if (p) { ic = true; track('InitiateCheckout', p); }
+});
+
+/* ---------- الأزرار ---------- */
+app.addEventListener('click', async e => {
+  const t = e.target.closest('[data-go],[data-act]'); if (!t) return;
+  if (t.dataset.go !== undefined) { if (t.dataset.go === '/admin') { edit = null; img = ''; } return go(t.dataset.go); }
+  const a = t.dataset.act, id = t.dataset.id;
+  try {
+    if (a === 'scroll') { document.getElementById('ord').scrollIntoView({ behavior: 'smooth' }); if (!ic) { ic = true; const p = P.find(x => x.id === id); if (p) track('InitiateCheckout', p); } return; }
+    if (a === 'login') { await api('/api/login', 'POST', { password: val('pw') }); adm = true; O = await api('/api/orders'); msg = ''; return render(); }
+    if (a === 'copy') { await navigator.clipboard.writeText(location.origin + '/p/' + id); msg = 'تم نسخ الرابط'; return render(); }
+    if (a === 'cancel') { edit = null; img = ''; draft = null; msg = ''; return render(); }
+    if (a === 'edit') { edit = id; img = P.find(p => p.id === id).img || ''; draft = null; msg = ''; render(); return scrollTo(0, 0); }
+    if (a === 'del') { if (confirm('حذف هذا المنتج؟')) { await api('/api/products/' + id, 'DELETE'); P = await api('/api/products'); render(); } return; }
+    if (a === 'save') {
+      if (!val('f-title').trim()) { msg = 'اكتب اسم المنتج'; return render(); }
+      const r = await api('/api/products', 'POST', { id: edit, img, title: val('f-title'), price: val('f-price'), desc: val('f-desc'), details: val('f-det').split('\n').map(s => s.trim()).filter(Boolean), pixel: val('f-pixel'), token: val('f-token'), test: val('f-test') });
+      P = await api('/api/products'); edit = null; img = ''; draft = null; msg = ''; return go('/p/' + r.id);
+    }
+    if (a === 'order') {
+      const p = P.find(x => x.id === id), qty = Math.max(1, parseInt(val('o-qty')) || 1), eventId = uid();
+      if (!val('o-name').trim() || val('o-phone').replace(/\D/g, '').length < 7) { msg = 'الاسم ورقم الهاتف مطلوبان'; return render(); }
+      t.disabled = true;
+      const body = { pid: id, name: val('o-name'), phone: val('o-phone'), city: val('o-city'), qty, eventId, url: location.href };
+      await api('/api/order', 'POST', body);
+      fb(pid(p), cfg.orderEvent, { content_ids: [id], content_type: 'product', value: p.price * qty, currency: cfg.currency, num_items: qty }, eventId);
+      const txt = `طلب جديد\nالمنتج: ${p.title}\nالكمية: ${qty}\nالاسم: ${body.name}\nالهاتف: ${body.phone}\nالمدينة: ${body.city}`;
+      done = { wa: cfg.wa ? `https://wa.me/${cfg.wa}?text=` + encodeURIComponent(txt) : '' };
+      msg = ''; return render();
+    }
+  } catch (x) { msg = x.message; render(); }
+});
+
+(async function init() {
+  try {
+    cfg = await api('/api/config');
+    P = await api('/api/products');
+    try { adm = (await api('/api/me')).admin; if (adm) O = await api('/api/orders'); } catch {}
+  } catch { app.innerHTML = '<p class="mu">تعذّر تحميل المتجر</p>'; return; }
+  route();
+})();
+</script>
+</body>
+</html>
